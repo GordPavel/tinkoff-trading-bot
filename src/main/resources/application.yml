@@ -1,1 +1,31 @@
+spring:
+  application.name: tinkoff-trading-bot
+  webflux:
+    format:
+      date-time: "yyy-MM-dd'T'HH:mm:ss.SSSXXX"
+      date: 'yyyy-MM-dd'
 
+server:
+  error:
+    includeMessage: ALWAYS
+
+internal.params:
+  home.time.zone: Europe/Moscow
+
+logging.level:
+  org.springframework.validation: INFO
+
+tinkoff.api:
+  pool:
+    pool-max-size: 10
+    expires-after: PT600S
+
+---
+spring:
+  profiles: debug
+
+server:
+  error:
+    includeException: true
+    includeStacktrace: ALWAYS
+    includeBindingErrors: ALWAYS
