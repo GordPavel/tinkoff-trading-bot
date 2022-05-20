@@ -1,42 +1,157 @@
 package tinkoff.trading.bot.market;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
-import ru.tinkoff.piapi.contract.v1.MarketDataResponse;
-import tinkoff.trading.bot.utils.mappers.backend.BackendCandle;
-import tinkoff.trading.bot.utils.mappers.backend.BackendTypesMapper;
+import reactor.core.publisher.Mono;
+import ru.tinkoff.piapi.contract.v1.CandleInterval;
+import tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter;
+import tinkoff.trading.bot.utils.mappers.backend.market.MarketDataMapper;
+import tinkoff.trading.bot.utils.mappers.backend.market.model.BackendMarketDataDto;
+import tinkoff.trading.bot.utils.mappers.backend.market.model.BackendOrderBookResponse;
+import tinkoff.trading.bot.utils.mappers.backend.market.model.BackendTrade;
+import tinkoff.trading.bot.utils.mappers.backend.market.model.BackendTradingStatus;
 
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import static java.util.function.Function.identity;
+import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME;
+import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
+import static reactor.core.publisher.FluxSink.OverflowStrategy.BUFFER;
 import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfiguration.GET_INVEST_API_FROM_CONTEXT;
-import static tinkoff.trading.bot.market.SubscriptionType.CANDLES_ONE_MINUTE;
+import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @RestController
 @RequestMapping("/backend/market/data")
 @RequiredArgsConstructor
 public class MarketDataController {
-    private final BackendTypesMapper backendTypesMapper;
+    private final MarketDataMapper marketDataMapper;
 
-    @GetMapping("/stream")
-    public Flux<BackendCandle> getMarketData(
+    @GetMapping(
+            value = "/stream",
+            produces = APPLICATION_NDJSON_VALUE
+    )
+    public Flux<BackendMarketDataDto> getMarketDataStream(
+            @RequestParam(value = "subscription-types", defaultValue = "CANDLES_ONE_MINUTE")
+            Set<SubscriptionType> subscriptionTypes,
             @RequestBody List<String> figis
     ) {
         final var streamId = UUID.randomUUID().toString();
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMapMany(api -> Flux.create(new MarketDataStreamToFluxCreator(
-                        streamId,
-                        api.getMarketDataStreamService(),
-                        figis,
-                        Set.of(CANDLES_ONE_MINUTE)
-                )))
-                .filter(MarketDataResponse::hasCandle)
-                .map(MarketDataResponse::getCandle)
-                .map(backendTypesMapper::toDto);
+                .flatMapMany(api -> Flux.create(
+                        new MarketDataStreamToFluxCreator(
+                                streamId,
+                                api.getMarketDataStreamService(),
+                                figis,
+                                subscriptionTypes
+                        ),
+                        BUFFER
+                ))
+                .flatMap(response -> Mono.justOrEmpty(marketDataMapper.toDto(response)));
     }
+
+    @GetMapping(
+            value = "/{figi}/candle",
+            produces = APPLICATION_NDJSON_VALUE
+    )
+    public Flux<BackendMarketDataDto> getCandlesForFigi(
+            @PathVariable String figi,
+            @RequestParam
+            @DateTimeFormat(iso = DATE_TIME)
+            ZonedDateTime from,
+            @RequestParam
+            @DateTimeFormat(iso = DATE_TIME)
+            ZonedDateTime to,
+            @RequestParam
+            CandleInterval candleInterval
+    ) {
+        return GET_INVEST_API_FROM_CONTEXT
+                .flatMap(api -> toMono(api.getMarketDataService().getCandles(
+                        figi,
+                        from.toInstant(),
+                        to.toInstant(),
+                        candleInterval
+                )))
+                .flatMapIterable(identity())
+                .map(marketDataMapper::toDto);
+    }
+
+    @GetMapping(
+            value = "/{figi}/status",
+            produces = APPLICATION_NDJSON_VALUE
+    )
+    public Mono<BackendTradingStatus> getTradingStatusForFigi(
+            @PathVariable String figi
+    ) {
+        return GET_INVEST_API_FROM_CONTEXT
+                .flatMap(api -> toMono(api.getMarketDataService().getTradingStatus(figi)))
+                .map(marketDataMapper::toDto);
+    }
+
+    @GetMapping(
+            value = "/{figi}/last-trades",
+            produces = APPLICATION_NDJSON_VALUE
+    )
+    public Flux<BackendTrade> getCandlesForFigi(
+            @PathVariable String figi,
+            @RequestParam
+            @DateTimeFormat(iso = DATE_TIME)
+            Optional<ZonedDateTime> from,
+            @RequestParam
+            @DateTimeFormat(iso = DATE_TIME)
+            Optional<ZonedDateTime> to
+    ) {
+        return GET_INVEST_API_FROM_CONTEXT
+                .flatMap(api -> Mono.justOrEmpty(from).zipWith(Mono.justOrEmpty(to))
+                                    .map(times -> api.getMarketDataService().getLastTrades(
+                                            figi,
+                                            times.getT1().toInstant(),
+                                            times.getT2().toInstant()
+                                    ))
+                                    .switchIfEmpty(
+                                            Mono.fromCallable(() -> api.getMarketDataService().getLastTrades(figi))
+                                    )
+                                    .flatMap(CompletableFutureToMonoAdapter::toMono)
+                )
+                .flatMapIterable(identity())
+                .map(marketDataMapper::toDto);
+    }
+
+    @GetMapping(
+            value = "/{figi}/last-trades",
+            produces = APPLICATION_NDJSON_VALUE
+    )
+    public Mono<BackendOrderBookResponse> getCandlesForFigi(
+            @PathVariable String figi,
+            @RequestParam int depth
+    ) {
+        return GET_INVEST_API_FROM_CONTEXT
+                .flatMap(api -> Mono.fromFuture(api.getMarketDataService().getOrderBook(figi, depth)))
+                .map(marketDataMapper::toDto);
+    }
+
+    @GetMapping(
+            value = "/last-prices/",
+            produces = APPLICATION_NDJSON_VALUE
+    )
+    public Flux<BackendMarketDataDto> getLastPricesForFigis(
+            @RequestParam Set<String> figis
+    ) {
+        return GET_INVEST_API_FROM_CONTEXT
+                .flatMap(api -> toMono(api.getMarketDataService().getLastPrices(figis)))
+                .flatMapIterable(identity())
+                .map(marketDataMapper::toDto);
+    }
+
+
 }

@@ -10,7 +10,6 @@ import static ru.tinkoff.piapi.contract.v1.SubscriptionInterval.SUBSCRIPTION_INT
 
 public enum SubscriptionType {
     TRADES(MarketDataSubscriptionService::subscribeTrades, MarketDataSubscriptionService::unsubscribeTrades),
-    INFO(MarketDataSubscriptionService::subscribeInfo, MarketDataSubscriptionService::unsubscribeInfo),
     LAST_PRICES(
             MarketDataSubscriptionService::subscribeLastPrices,
             MarketDataSubscriptionService::unsubscribeLastPrices

@@ -8,7 +8,7 @@ import tinkoff.trading.bot.market.instrument.Currency;
 
 import static java.util.Objects.isNull;
 import static java.util.function.Function.identity;
-import static tinkoff.trading.bot.market.CompletableFutureToMonoAdapter.toMono;
+import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @Service("CURRENCY")
 @RequiredArgsConstructor

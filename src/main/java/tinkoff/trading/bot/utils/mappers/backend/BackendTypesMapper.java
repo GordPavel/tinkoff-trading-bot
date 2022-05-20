@@ -5,9 +5,9 @@ import com.google.protobuf.ProtocolStringList;
 import com.google.protobuf.Timestamp;
 import org.mapstruct.Mapper;
 import ru.tinkoff.piapi.contract.v1.Account;
-import ru.tinkoff.piapi.contract.v1.Candle;
 import ru.tinkoff.piapi.contract.v1.MoneyValue;
 import ru.tinkoff.piapi.contract.v1.Operation;
+import ru.tinkoff.piapi.contract.v1.Order;
 import ru.tinkoff.piapi.contract.v1.OrderDirection;
 import ru.tinkoff.piapi.contract.v1.OrderState;
 import ru.tinkoff.piapi.contract.v1.OrderType;
@@ -15,11 +15,18 @@ import ru.tinkoff.piapi.contract.v1.Quotation;
 import ru.tinkoff.piapi.contract.v1.TradingSchedule;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = "spring",
+        uses = {
+                BackendTypesMapper.class,
+        }
+)
 public interface BackendTypesMapper {
 
     default List<String> toDto(ProtocolStringList list) {
@@ -46,13 +53,17 @@ public interface BackendTypesMapper {
 
     BackendOperation toDto(Operation operation);
 
-    BackendCandle toDto(Candle candle);
+    BackendOrder toDto(Order order);
 
-    default LocalDateTime toTime(Timestamp timestamp) {
+    default LocalDateTime toLocalTime(Timestamp timestamp) {
         return LocalDateTime.ofEpochSecond(
                 timestamp.getSeconds(),
                 timestamp.getNanos(),
                 ZoneOffset.UTC
         );
+    }
+
+    default ZonedDateTime toZonedTime(Timestamp timestamp) {
+        return toLocalTime(timestamp).atZone(ZoneId.of("UTC"));
     }
 }

@@ -21,7 +21,7 @@ import java.time.ZonedDateTime;
 import static java.util.function.Function.identity;
 import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME;
 import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfiguration.GET_INVEST_API_FROM_CONTEXT;
-import static tinkoff.trading.bot.market.CompletableFutureToMonoAdapter.toMono;
+import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @RestController
 @RequestMapping("/backend/instrument/schedule")

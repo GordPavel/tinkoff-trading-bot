@@ -8,7 +8,7 @@ import tinkoff.trading.bot.market.instrument.Future;
 
 import static java.util.Objects.isNull;
 import static java.util.function.Function.identity;
-import static tinkoff.trading.bot.market.CompletableFutureToMonoAdapter.toMono;
+import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @Service("FUTURE")
 @RequiredArgsConstructor

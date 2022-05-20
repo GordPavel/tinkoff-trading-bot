@@ -1,4 +1,4 @@
-package tinkoff.trading.bot.market;
+package tinkoff.trading.bot.utils;
 
 import lombok.experimental.UtilityClass;
 import reactor.core.publisher.Mono;
