@@ -28,7 +28,7 @@ import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 @RestController
 @RequestMapping("/backend/sandbox/account")
 @RequiredArgsConstructor
-public class AccountController {
+public class SandboxAccountController {
 
     private final BackendAccountMapper mapper;
     private final BackendTypesMapper   protobufMapper;

@@ -1,4 +1,4 @@
-package tinkoff.trading.bot.account;
+package tinkoff.trading.bot.order;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,8 +25,8 @@ import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final BackendAccountMapper mapper;
-    private final BackendTypesMapper   protobufMapper;
+    private final BackendOrderMapper mapper;
+    private final BackendTypesMapper protobufMapper;
 
     @GetMapping("/all")
     public Flux<BackendOrderState> getOrders(

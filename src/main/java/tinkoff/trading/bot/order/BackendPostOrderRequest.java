@@ -1,4 +1,4 @@
-package tinkoff.trading.bot.account;
+package tinkoff.trading.bot.order;
 
 import lombok.Value;
 import tinkoff.trading.bot.utils.mappers.backend.BackendQuotation;

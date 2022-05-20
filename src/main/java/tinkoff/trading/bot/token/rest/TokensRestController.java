@@ -14,7 +14,7 @@ import tinkoff.trading.bot.token.TokensStorage;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/account")
+@RequestMapping("/token")
 @Validated
 @RequiredArgsConstructor
 class TokensRestController {
@@ -28,11 +28,11 @@ class TokensRestController {
         return tokensStorage.saveAccount(tokenDto.getToken()).map(UUID::toString);
     }
 
-    @DeleteMapping("/{accountId}")
+    @DeleteMapping("/{tokenId}")
     Mono<Void> deleteAccount(
-            @PathVariable String accountId
+            @PathVariable String tokenId
     ) {
-        return tokensStorage.deleteAccount(UUID.fromString(accountId));
+        return tokensStorage.deleteAccount(UUID.fromString(tokenId));
     }
 
 }
