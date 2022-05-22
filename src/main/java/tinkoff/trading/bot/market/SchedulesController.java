@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import tinkoff.trading.bot.utils.mappers.backend.BackendTradingSchedule;
-import tinkoff.trading.bot.utils.mappers.backend.BackendTypesMapper;
+import tinkoff.trading.bot.backend.api.model.BackendTradingSchedule;
+import tinkoff.trading.bot.backend.api.model.BackendTypesMapper;
 
 import javax.validation.ValidationException;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
@@ -37,13 +38,13 @@ public class SchedulesController {
     public Flux<BackendTradingSchedule> getAllExchangesSchedules(
             @RequestParam
             @DateTimeFormat(iso = DATE_TIME)
-            ZonedDateTime from,
+            OffsetDateTime from,
             @RequestParam
             @DateTimeFormat(iso = DATE_TIME)
-            ZonedDateTime to
+            OffsetDateTime to
     ) {
-        final var homeZoneFrom = from.withZoneSameInstant(homeZoneId);
-        final var homeZoneTo   = to.withZoneSameInstant(homeZoneId);
+        final var homeZoneFrom = from.atZoneSameInstant(homeZoneId);
+        final var homeZoneTo   = to.atZoneSameInstant(homeZoneId);
         validateTimestamps(homeZoneFrom, homeZoneTo);
         return GET_INVEST_API_FROM_CONTEXT
                 .flatMap(api -> toMono(api.getInstrumentsService().getTradingSchedules(
@@ -59,13 +60,13 @@ public class SchedulesController {
             @PathVariable String exchangeId,
             @RequestParam
             @DateTimeFormat(iso = DATE_TIME)
-            ZonedDateTime from,
+            OffsetDateTime from,
             @RequestParam
             @DateTimeFormat(iso = DATE_TIME)
-            ZonedDateTime to
+            OffsetDateTime to
     ) {
-        final var homeZoneFrom = from.withZoneSameInstant(homeZoneId);
-        final var homeZoneTo   = to.withZoneSameInstant(homeZoneId);
+        final var homeZoneFrom = from.atZoneSameInstant(homeZoneId);
+        final var homeZoneTo   = to.atZoneSameInstant(homeZoneId);
         validateTimestamps(homeZoneFrom, homeZoneTo);
         return GET_INVEST_API_FROM_CONTEXT
                 .flatMap(api -> toMono(api.getInstrumentsService().getTradingSchedule(

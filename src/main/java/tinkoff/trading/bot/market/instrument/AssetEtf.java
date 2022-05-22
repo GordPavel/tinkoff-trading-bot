@@ -1,7 +1,7 @@
 package tinkoff.trading.bot.market.instrument;
 
 import lombok.Value;
-import tinkoff.trading.bot.utils.mappers.backend.BackendQuotation;
+import tinkoff.trading.bot.backend.api.model.BackendQuotation;
 
 import java.time.LocalDateTime;
 import java.util.List;

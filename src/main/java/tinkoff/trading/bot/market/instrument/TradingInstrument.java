@@ -3,7 +3,7 @@ package tinkoff.trading.bot.market.instrument;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
-import tinkoff.trading.bot.utils.mappers.backend.BackendQuotation;
+import tinkoff.trading.bot.backend.api.model.BackendQuotation;
 
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)

@@ -3,7 +3,7 @@ package tinkoff.trading.bot.market.instrument;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
-import tinkoff.trading.bot.utils.mappers.backend.BackendMoneyValue;
+import tinkoff.trading.bot.backend.api.model.BackendMoneyValue;
 
 import java.time.LocalDateTime;
 

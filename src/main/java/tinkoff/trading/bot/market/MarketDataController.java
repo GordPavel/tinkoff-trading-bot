@@ -1,6 +1,7 @@
 package tinkoff.trading.bot.market;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,14 +12,15 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.tinkoff.piapi.contract.v1.CandleInterval;
+import tinkoff.trading.bot.backend.api.model.market.MarketDataMapper;
+import tinkoff.trading.bot.backend.api.model.market.model.BackendMarketDataDto;
+import tinkoff.trading.bot.backend.api.model.market.model.BackendOrderBookResponse;
+import tinkoff.trading.bot.backend.api.model.market.model.BackendTrade;
+import tinkoff.trading.bot.backend.api.model.market.model.BackendTradingStatus;
 import tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter;
-import tinkoff.trading.bot.utils.mappers.backend.market.MarketDataMapper;
-import tinkoff.trading.bot.utils.mappers.backend.market.model.BackendMarketDataDto;
-import tinkoff.trading.bot.utils.mappers.backend.market.model.BackendOrderBookResponse;
-import tinkoff.trading.bot.utils.mappers.backend.market.model.BackendTrade;
-import tinkoff.trading.bot.utils.mappers.backend.market.model.BackendTradingStatus;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -36,6 +38,9 @@ import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 @RequiredArgsConstructor
 public class MarketDataController {
     private final MarketDataMapper marketDataMapper;
+
+    @Value(("${internal.params.home.time.zone}"))
+    private ZoneId homeZoneId;
 
     @GetMapping(
             value = "/stream",
@@ -68,18 +73,18 @@ public class MarketDataController {
             @PathVariable String figi,
             @RequestParam
             @DateTimeFormat(iso = DATE_TIME)
-            ZonedDateTime from,
+            OffsetDateTime from,
             @RequestParam
             @DateTimeFormat(iso = DATE_TIME)
-            ZonedDateTime to,
+            OffsetDateTime to,
             @RequestParam
             CandleInterval candleInterval
     ) {
         return GET_INVEST_API_FROM_CONTEXT
                 .flatMap(api -> toMono(api.getMarketDataService().getCandles(
                         figi,
-                        from.toInstant(),
-                        to.toInstant(),
+                        from.atZoneSameInstant(homeZoneId).toInstant(),
+                        to.atZoneSameInstant(homeZoneId).toInstant(),
                         candleInterval
                 )))
                 .flatMapIterable(identity())
@@ -106,17 +111,17 @@ public class MarketDataController {
             @PathVariable String figi,
             @RequestParam
             @DateTimeFormat(iso = DATE_TIME)
-            Optional<ZonedDateTime> from,
+            Optional<OffsetDateTime> from,
             @RequestParam
             @DateTimeFormat(iso = DATE_TIME)
-            Optional<ZonedDateTime> to
+            Optional<OffsetDateTime> to
     ) {
         return GET_INVEST_API_FROM_CONTEXT
                 .flatMap(api -> Mono.justOrEmpty(from).zipWith(Mono.justOrEmpty(to))
                                     .map(times -> api.getMarketDataService().getLastTrades(
                                             figi,
-                                            times.getT1().toInstant(),
-                                            times.getT2().toInstant()
+                                            times.getT1().atZoneSameInstant(homeZoneId).toInstant(),
+                                            times.getT2().atZoneSameInstant(homeZoneId).toInstant()
                                     ))
                                     .switchIfEmpty(
                                             Mono.fromCallable(() -> api.getMarketDataService().getLastTrades(figi))

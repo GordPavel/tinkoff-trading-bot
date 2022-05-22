@@ -13,13 +13,16 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.tinkoff.piapi.contract.v1.OperationState;
-import tinkoff.trading.bot.utils.mappers.backend.BackendAccount;
-import tinkoff.trading.bot.utils.mappers.backend.BackendMoneyValue;
-import tinkoff.trading.bot.utils.mappers.backend.BackendOperation;
-import tinkoff.trading.bot.utils.mappers.backend.BackendTypesMapper;
+import tinkoff.trading.bot.account.model.BackendAccountMapper;
+import tinkoff.trading.bot.account.model.BackendPortfolioResponse;
+import tinkoff.trading.bot.account.model.BackendPositionsResponse;
+import tinkoff.trading.bot.backend.api.model.BackendAccount;
+import tinkoff.trading.bot.backend.api.model.BackendMoneyValue;
+import tinkoff.trading.bot.backend.api.model.BackendOperation;
+import tinkoff.trading.bot.backend.api.model.BackendTypesMapper;
 
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 
 import static java.util.function.Function.identity;
 import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfiguration.GET_INVEST_API_FROM_CONTEXT;
@@ -30,8 +33,8 @@ import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 @RequiredArgsConstructor
 public class SandboxAccountController {
 
-    private final BackendAccountMapper mapper;
-    private final BackendTypesMapper   protobufMapper;
+    private final BackendAccountMapper backendAccountMapper;
+    private final BackendTypesMapper   backendTypesMapper;
 
     @Value(("${internal.params.home.time.zone}"))
     private ZoneId homeZoneId;
@@ -57,7 +60,7 @@ public class SandboxAccountController {
         return GET_INVEST_API_FROM_CONTEXT
                 .flatMap(api -> toMono(api.getSandboxService().getAccounts()))
                 .flatMapIterable(identity())
-                .map(protobufMapper::toDto);
+                .map(backendTypesMapper::toDto);
     }
 
     @PostMapping("/{accountId}/pay-in")
@@ -66,8 +69,8 @@ public class SandboxAccountController {
             @RequestBody BackendMoneyValue amount
     ) {
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMap(api -> toMono(api.getSandboxService().payIn(accountId, protobufMapper.fromDto(amount))))
-                .map(protobufMapper::toDto);
+                .flatMap(api -> toMono(api.getSandboxService().payIn(accountId, backendTypesMapper.fromDto(amount))))
+                .map(backendTypesMapper::toDto);
     }
 
     @GetMapping("/{accountId}/portfolio")
@@ -76,7 +79,7 @@ public class SandboxAccountController {
     ) {
         return GET_INVEST_API_FROM_CONTEXT
                 .flatMap(api -> toMono(api.getSandboxService().getPortfolio(accountId)))
-                .map(mapper::toDto);
+                .map(backendAccountMapper::toDto);
     }
 
     @GetMapping("/{accountId}/positions")
@@ -85,27 +88,27 @@ public class SandboxAccountController {
     ) {
         return GET_INVEST_API_FROM_CONTEXT
                 .flatMap(api -> toMono(api.getSandboxService().getPositions(accountId)))
-                .map(mapper::toDto);
+                .map(backendAccountMapper::toDto);
     }
 
     @GetMapping("/{accountId}/operation/all")
     public Flux<BackendOperation> getOperations(
             @PathVariable String accountId,
-            @RequestParam ZonedDateTime from,
-            @RequestParam ZonedDateTime to,
+            @RequestParam OffsetDateTime from,
+            @RequestParam OffsetDateTime to,
             @RequestParam OperationState operationState,
             @RequestParam(required = false) String figi
     ) {
         return GET_INVEST_API_FROM_CONTEXT
                 .flatMap(api -> toMono(api.getSandboxService().getOperations(
                         accountId,
-                        from.withZoneSameInstant(homeZoneId).toInstant(),
-                        to.withZoneSameInstant(homeZoneId).toInstant(),
+                        from.atZoneSameInstant(homeZoneId).toInstant(),
+                        to.atZoneSameInstant(homeZoneId).toInstant(),
                         operationState,
                         figi
                 )))
                 .flatMapIterable(identity())
-                .map(protobufMapper::toDto);
+                .map(backendTypesMapper::toDto);
     }
 
 }

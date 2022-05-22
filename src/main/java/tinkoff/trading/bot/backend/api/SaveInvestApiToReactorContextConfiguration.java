@@ -44,7 +44,8 @@ public class SaveInvestApiToReactorContextConfiguration
         return accountsStorage.getAccount(tokenUuid)
                               .switchIfEmpty(Mono.error(() -> new AccountNotFoundException(tokenUuid)))
                               .map(apiPool::getTinkoffApi)
-                              .flatMap(api -> chain.filter(exchange).contextWrite(ctx -> ctx.put(INVEST_API_CONTEXT_KEY, api))
+                              .flatMap(api -> chain.filter(exchange)
+                                                   .contextWrite(ctx -> ctx.put(INVEST_API_CONTEXT_KEY, api))
                               );
     }
 }

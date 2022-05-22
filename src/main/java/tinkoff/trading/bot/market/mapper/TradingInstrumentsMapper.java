@@ -2,6 +2,7 @@ package tinkoff.trading.bot.market.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import tinkoff.trading.bot.backend.api.model.BackendTypesMapper;
 import tinkoff.trading.bot.market.instrument.Asset;
 import tinkoff.trading.bot.market.instrument.AssetFull;
 import tinkoff.trading.bot.market.instrument.Bond;
@@ -10,7 +11,6 @@ import tinkoff.trading.bot.market.instrument.Etf;
 import tinkoff.trading.bot.market.instrument.Future;
 import tinkoff.trading.bot.market.instrument.Share;
 import tinkoff.trading.bot.market.instrument.TradingInstrument;
-import tinkoff.trading.bot.utils.mappers.backend.BackendTypesMapper;
 
 import static org.mapstruct.NullValueMappingStrategy.RETURN_DEFAULT;
 
