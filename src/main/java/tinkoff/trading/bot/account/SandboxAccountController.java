@@ -29,7 +29,7 @@ import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfi
 import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @RestController
-@RequestMapping("/backend/sandbox/account")
+@RequestMapping("/backend/sandbox/accounts")
 @RequiredArgsConstructor
 public class SandboxAccountController {
 
@@ -53,7 +53,7 @@ public class SandboxAccountController {
         return GET_INVEST_API_FROM_CONTEXT.flatMap(api -> toMono(api.getSandboxService().closeAccount(accountId)));
     }
 
-    @GetMapping("/all")
+    @GetMapping
     public Flux<BackendAccount> getAccountsList(
 
     ) {
@@ -91,7 +91,7 @@ public class SandboxAccountController {
                 .map(backendAccountMapper::toDto);
     }
 
-    @GetMapping("/{accountId}/operation/all")
+    @GetMapping("/{accountId}/operations")
     public Flux<BackendOperation> getOperations(
             @PathVariable String accountId,
             @RequestParam OffsetDateTime from,

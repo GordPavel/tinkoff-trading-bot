@@ -43,7 +43,7 @@ import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfi
 import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @RestController
-@RequestMapping("/backend/account")
+@RequestMapping("/backend/accounts")
 @RequiredArgsConstructor
 public class OperationsController {
     private final BackendTypesMapper   backendTypesMapper;
@@ -52,7 +52,7 @@ public class OperationsController {
     @Value(("${internal.params.home.time.zone}"))
     private ZoneId homeZoneId;
 
-    @GetMapping("/{accountId}/operation/all")
+    @GetMapping("/{accountId}/operations")
     public Flux<BackendOperation> getAllOperations(
             @PathVariable String accountId,
             @RequestParam Optional<String> figi,
@@ -101,7 +101,7 @@ public class OperationsController {
     }
 
     @GetMapping(
-            value = "/{accountId}/broker-report",
+            value = "/{accountId}/broker-reports",
             produces = MediaType.APPLICATION_NDJSON_VALUE
     )
     public Flux<BackendBrokerReport> getBrokerReport(
@@ -121,7 +121,7 @@ public class OperationsController {
     }
 
     @GetMapping(
-            value = "/{accountId}/foreign-dividends-report",
+            value = "/{accountId}/foreign-dividends-reports",
             produces = MediaType.APPLICATION_NDJSON_VALUE
     )
     public Flux<BackendDividendsForeignIssuerReport> getDividendsForeignIssuerReport(
@@ -146,7 +146,7 @@ public class OperationsController {
                 .map(backendAccountMapper::toDto);
     }
 
-    @GetMapping("/{accountId}/operation/{status}")
+    @GetMapping("/{accountId}/operations/{status}")
     public Flux<BackendOperation> getExecutedOperations(
             @PathVariable String accountId,
             @PathVariable("status") String operationStatus,

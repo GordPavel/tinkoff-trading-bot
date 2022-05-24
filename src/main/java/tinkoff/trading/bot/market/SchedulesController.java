@@ -25,7 +25,7 @@ import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfi
 import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @RestController
-@RequestMapping("/backend/instrument/schedule")
+@RequestMapping("/backend/instrument/schedules")
 @RequiredArgsConstructor
 @Slf4j
 public class SchedulesController {
@@ -34,7 +34,7 @@ public class SchedulesController {
     @Value(("${internal.params.home.time.zone}"))
     private       ZoneId             homeZoneId;
 
-    @GetMapping("/all")
+    @GetMapping
     public Flux<BackendTradingSchedule> getAllExchangesSchedules(
             @RequestParam
             @DateTimeFormat(iso = DATE_TIME)

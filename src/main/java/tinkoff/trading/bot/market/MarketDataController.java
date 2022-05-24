@@ -66,7 +66,7 @@ public class MarketDataController {
     }
 
     @GetMapping(
-            value = "/{figi}/candle",
+            value = "/{figi}/candles",
             produces = APPLICATION_NDJSON_VALUE
     )
     public Flux<BackendMarketDataDto> getCandlesForFigi(

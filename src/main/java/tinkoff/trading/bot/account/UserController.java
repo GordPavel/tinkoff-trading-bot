@@ -19,7 +19,7 @@ import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfi
 import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @RestController
-@RequestMapping("/backend/user")
+@RequestMapping("/backend/users")
 @RequiredArgsConstructor
 public class UserController {
     private final BackendAccountMapper backendAccountMapper;
@@ -39,7 +39,7 @@ public class UserController {
                 .map(backendAccountMapper::toDto);
     }
 
-    @GetMapping("/account/all")
+    @GetMapping("/accounts")
     public Flux<BackendAccount> getAllAccounts() {
         return GET_INVEST_API_FROM_CONTEXT
                 .flatMap(api -> toMono(api.getUserService().getAccounts()))
@@ -47,7 +47,7 @@ public class UserController {
                 .map(backendTypesMapper::toDto);
     }
 
-    @GetMapping("/account/{accountId}/margin-attributes")
+    @GetMapping("/accounts/{accountId}/margin-attributes")
     public Mono<BackendMarginAttributes> getAccountMarginAttribute(
             @PathVariable String accountId
     ) {

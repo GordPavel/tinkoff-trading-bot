@@ -32,7 +32,7 @@ import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfi
 import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @RestController
-@RequestMapping("/backend/account/{accountId}/order")
+@RequestMapping("/backend/accounts/{accountId}/orders")
 @RequiredArgsConstructor
 @ConditionalOnExpression("${tinkoff.api.type}!='SANDBOX'")
 public class OrderController {
@@ -42,7 +42,7 @@ public class OrderController {
     @Value(("${internal.params.home.time.zone}"))
     private ZoneId homeZoneId;
 
-    @GetMapping("/all")
+    @GetMapping
     public Flux<BackendOrderState> getOrders(
             @PathVariable String accountId
     ) {
@@ -93,7 +93,7 @@ public class OrderController {
                 );
     }
 
-    @GetMapping("/stop/all")
+    @GetMapping("/stops")
     public Flux<BackendStopOrder> getAllStopOrders(
             @PathVariable String accountId
     ) {
@@ -103,7 +103,7 @@ public class OrderController {
                 .map(backendTypesMapper::toDto);
     }
 
-    @PostMapping("/stop")
+    @PostMapping("/stops")
     public Mono<String> postStopOrder(
             @PathVariable String accountId,
             @RequestBody BackendPostStopOrderRequest request
@@ -116,7 +116,7 @@ public class OrderController {
                 ));
     }
 
-    @PostMapping("/stop/{orderId}")
+    @DeleteMapping("/stops/{orderId}")
     public Mono<ZonedDateTime> cancelStopOrder(
             @PathVariable String accountId,
             @PathVariable String orderId

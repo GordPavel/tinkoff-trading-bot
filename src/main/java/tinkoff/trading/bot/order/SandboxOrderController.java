@@ -25,18 +25,18 @@ import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfi
 import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @RestController
-@RequestMapping("/backend/sandbox/account/{accountId}/order")
 @RequiredArgsConstructor
 @ConditionalOnProperty(
         value = "tinkoff.api.type",
         havingValue = "SANDBOX"
 )
+@RequestMapping("/backend/sandbox/accounts/{accountId}/orders")
 public class SandboxOrderController {
 
     private final BackendOrderMapper backendOrderMapper;
     private final BackendTypesMapper backendTypesMapper;
 
-    @GetMapping("/all")
+    @GetMapping
     public Flux<BackendOrderState> getOrders(
             @PathVariable String accountId
     ) {

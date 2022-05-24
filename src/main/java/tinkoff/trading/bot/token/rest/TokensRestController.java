@@ -14,7 +14,7 @@ import tinkoff.trading.bot.token.TokensStorage;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/token")
+@RequestMapping("/tokens")
 @Validated
 @RequiredArgsConstructor
 class TokensRestController {

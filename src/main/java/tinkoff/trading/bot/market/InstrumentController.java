@@ -24,7 +24,7 @@ import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfi
 import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @RestController
-@RequestMapping("/backend/instrument")
+@RequestMapping("/backend/instruments")
 @RequiredArgsConstructor
 @Slf4j
 public class InstrumentController {
@@ -32,7 +32,7 @@ public class InstrumentController {
     private final Map<String, TradingInstrumentCallMapper> tradingInstrumentCallers;
     private final TradingInstrumentsMapper                 instrumentsMapper;
 
-    @GetMapping("/asset/all")
+    @GetMapping("/assets")
     public Flux<Asset> getAssets(
 
     ) {
@@ -42,7 +42,7 @@ public class InstrumentController {
                 .map(instrumentsMapper::toDto);
     }
 
-    @GetMapping("/asset/{uid}")
+    @GetMapping("/assets/{uid}")
     public Mono<AssetFull> getAssets(
             @PathVariable String uid
     ) {
@@ -64,7 +64,7 @@ public class InstrumentController {
                 );
     }
 
-    @GetMapping("/{type}/figi/{figi}")
+    @GetMapping("/{type}/figis/{figi}")
     public Flux<? extends TradingInstrument> getTradingSpecifiedInstrumentByFigi(
             @PathVariable InstrumentType type,
             @PathVariable String figi
