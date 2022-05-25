@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,15 +20,11 @@ import tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import static java.util.function.Function.identity;
 import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME;
-import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
-import static reactor.core.publisher.FluxSink.OverflowStrategy.BUFFER;
 import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfiguration.GET_INVEST_API_FROM_CONTEXT;
 import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
@@ -42,33 +37,7 @@ public class MarketDataController {
     @Value(("${internal.params.home.time.zone}"))
     private ZoneId homeZoneId;
 
-    @GetMapping(
-            value = "/stream",
-            produces = APPLICATION_NDJSON_VALUE
-    )
-    public Flux<BackendMarketDataDto> getMarketDataStream(
-            @RequestParam(value = "subscription-types", defaultValue = "CANDLES_ONE_MINUTE")
-            Set<SubscriptionType> subscriptionTypes,
-            @RequestBody List<String> figis
-    ) {
-        final var streamId = UUID.randomUUID().toString();
-        return GET_INVEST_API_FROM_CONTEXT
-                .flatMapMany(api -> Flux.create(
-                        new MarketDataStreamToFluxCreator(
-                                streamId,
-                                api.getMarketDataStreamService(),
-                                figis,
-                                subscriptionTypes
-                        ),
-                        BUFFER
-                ))
-                .flatMap(response -> Mono.justOrEmpty(marketDataMapper.toDto(response)));
-    }
-
-    @GetMapping(
-            value = "/{figi}/candles",
-            produces = APPLICATION_NDJSON_VALUE
-    )
+    @GetMapping("/{figi}/candles")
     public Flux<BackendMarketDataDto> getCandlesForFigi(
             @PathVariable String figi,
             @RequestParam
@@ -91,10 +60,7 @@ public class MarketDataController {
                 .map(marketDataMapper::toDto);
     }
 
-    @GetMapping(
-            value = "/{figi}/status",
-            produces = APPLICATION_NDJSON_VALUE
-    )
+    @GetMapping("/{figi}/status")
     public Mono<BackendTradingStatus> getTradingStatusForFigi(
             @PathVariable String figi
     ) {
@@ -103,11 +69,8 @@ public class MarketDataController {
                 .map(marketDataMapper::toDto);
     }
 
-    @GetMapping(
-            value = "/{figi}/last-trades",
-            produces = APPLICATION_NDJSON_VALUE
-    )
-    public Flux<BackendTrade> getCandlesForFigi(
+    @GetMapping("/{figi}/last-trades")
+    public Flux<BackendTrade> getLastTradesForFigi(
             @PathVariable String figi,
             @RequestParam
             @DateTimeFormat(iso = DATE_TIME)
@@ -132,11 +95,8 @@ public class MarketDataController {
                 .map(marketDataMapper::toDto);
     }
 
-    @GetMapping(
-            value = "/{figi}/last-trades",
-            produces = APPLICATION_NDJSON_VALUE
-    )
-    public Mono<BackendOrderBookResponse> getCandlesForFigi(
+    @GetMapping("/{figi}/order-book")
+    public Mono<BackendOrderBookResponse> getOrderBookForFigi(
             @PathVariable String figi,
             @RequestParam int depth
     ) {
@@ -145,10 +105,7 @@ public class MarketDataController {
                 .map(marketDataMapper::toDto);
     }
 
-    @GetMapping(
-            value = "/last-prices/",
-            produces = APPLICATION_NDJSON_VALUE
-    )
+    @GetMapping("/last-prices/")
     public Flux<BackendMarketDataDto> getLastPricesForFigis(
             @RequestParam Set<String> figis
     ) {
@@ -157,6 +114,5 @@ public class MarketDataController {
                 .flatMapIterable(identity())
                 .map(marketDataMapper::toDto);
     }
-
 
 }

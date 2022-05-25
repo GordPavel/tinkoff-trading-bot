@@ -34,7 +34,7 @@ import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 @RestController
 @RequestMapping("/backend/accounts/{accountId}/orders")
 @RequiredArgsConstructor
-@ConditionalOnExpression("${tinkoff.api.type}!='SANDBOX'")
+@ConditionalOnExpression("!'${tinkoff.api.type}'.equals('SANDBOX')")
 public class OrderController {
     private final BackendOrderMapper backendOrderMapper;
     private final BackendTypesMapper backendTypesMapper;

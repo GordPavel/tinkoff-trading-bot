@@ -16,6 +16,12 @@ logging.level:
   org.springframework.validation: INFO
 
 tinkoff.api:
+  market.data.pool:
+    pool-max-size: 30
+    pool-expires-after: PT2H
+    stream-cache-size: 100
+    stream-cache-expires-after: PT600S
+    stream-cache-backpressure-strategy: LATEST
   pool:
     pool-max-size: 10
     expires-after: PT600S

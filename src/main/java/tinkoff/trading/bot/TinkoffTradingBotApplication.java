@@ -10,6 +10,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Profiles;
 import tinkoff.trading.bot.backend.api.InvestApiPool;
+import tinkoff.trading.bot.market.service.MarketDataStreamsPool;
 import tinkoff.trading.bot.token.InMemoryTokensStorage;
 import tinkoff.trading.bot.token.TokenAccount;
 
@@ -24,6 +25,7 @@ import java.util.UUID;
 @EnableConfigurationProperties(
         {
                 InvestApiPool.ApiPoolConfigs.class,
+                MarketDataStreamsPool.MarketDataStreamsPoolConfigs.class,
         }
 )
 public class TinkoffTradingBotApplication {
