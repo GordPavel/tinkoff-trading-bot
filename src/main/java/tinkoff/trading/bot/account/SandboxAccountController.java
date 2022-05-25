@@ -1,7 +1,6 @@
 package tinkoff.trading.bot.account;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,44 +12,38 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.tinkoff.piapi.contract.v1.OperationState;
-import tinkoff.trading.bot.account.model.BackendAccountMapper;
+import tinkoff.trading.bot.account.client.BackendSandboxAccountClient;
 import tinkoff.trading.bot.account.model.BackendPortfolioResponse;
 import tinkoff.trading.bot.account.model.BackendPositionsResponse;
 import tinkoff.trading.bot.backend.api.model.BackendAccount;
 import tinkoff.trading.bot.backend.api.model.BackendMoneyValue;
 import tinkoff.trading.bot.backend.api.model.BackendOperation;
-import tinkoff.trading.bot.backend.api.model.BackendTypesMapper;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 
-import static java.util.function.Function.identity;
 import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfiguration.GET_INVEST_API_FROM_CONTEXT;
-import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @RestController
 @RequestMapping("/backend/sandbox/accounts")
 @RequiredArgsConstructor
 public class SandboxAccountController {
 
-    private final BackendAccountMapper backendAccountMapper;
-    private final BackendTypesMapper   backendTypesMapper;
-
-    @Value(("${internal.params.home.time.zone}"))
-    private ZoneId homeZoneId;
+    private final BackendSandboxAccountClient sandboxAccountClient;
 
     @PostMapping
     public Mono<String> createAccount(
 
     ) {
-        return GET_INVEST_API_FROM_CONTEXT.flatMap(api -> toMono(api.getSandboxService().openAccount()));
+        return GET_INVEST_API_FROM_CONTEXT
+                .flatMap(sandboxAccountClient::createAccount);
     }
 
     @DeleteMapping("/{accountId}")
     public Mono<Void> deleteAccount(
             @PathVariable String accountId
     ) {
-        return GET_INVEST_API_FROM_CONTEXT.flatMap(api -> toMono(api.getSandboxService().closeAccount(accountId)));
+        return GET_INVEST_API_FROM_CONTEXT
+                .flatMap(api -> sandboxAccountClient.deleteAccount(api, accountId));
     }
 
     @GetMapping
@@ -58,9 +51,7 @@ public class SandboxAccountController {
 
     ) {
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMap(api -> toMono(api.getSandboxService().getAccounts()))
-                .flatMapIterable(identity())
-                .map(backendTypesMapper::toDto);
+                .flatMapMany(sandboxAccountClient::getAccountsList);
     }
 
     @PostMapping("/{accountId}/pay-in")
@@ -69,8 +60,7 @@ public class SandboxAccountController {
             @RequestBody BackendMoneyValue amount
     ) {
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMap(api -> toMono(api.getSandboxService().payIn(accountId, backendTypesMapper.fromDto(amount))))
-                .map(backendTypesMapper::toDto);
+                .flatMap(api -> sandboxAccountClient.payIn(api, accountId, amount));
     }
 
     @GetMapping("/{accountId}/portfolio")
@@ -78,8 +68,7 @@ public class SandboxAccountController {
             @PathVariable String accountId
     ) {
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMap(api -> toMono(api.getSandboxService().getPortfolio(accountId)))
-                .map(backendAccountMapper::toDto);
+                .flatMap(api -> sandboxAccountClient.getPortfolio(api, accountId));
     }
 
     @GetMapping("/{accountId}/positions")
@@ -87,8 +76,7 @@ public class SandboxAccountController {
             @PathVariable String accountId
     ) {
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMap(api -> toMono(api.getSandboxService().getPositions(accountId)))
-                .map(backendAccountMapper::toDto);
+                .flatMap(api -> sandboxAccountClient.getPositions(api, accountId));
     }
 
     @GetMapping("/{accountId}/operations")
@@ -100,15 +88,14 @@ public class SandboxAccountController {
             @RequestParam(required = false) String figi
     ) {
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMap(api -> toMono(api.getSandboxService().getOperations(
+                .flatMapMany(api -> sandboxAccountClient.getOperations(
+                        api,
                         accountId,
-                        from.atZoneSameInstant(homeZoneId).toInstant(),
-                        to.atZoneSameInstant(homeZoneId).toInstant(),
+                        from,
+                        to,
                         operationState,
                         figi
-                )))
-                .flatMapIterable(identity())
-                .map(backendTypesMapper::toDto);
+                ));
     }
 
 }
