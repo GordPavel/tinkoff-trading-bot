@@ -8,20 +8,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import tinkoff.trading.bot.market.client.BackendInstrumentClient;
 import tinkoff.trading.bot.market.instrument.Asset;
 import tinkoff.trading.bot.market.instrument.AssetFull;
 import tinkoff.trading.bot.market.instrument.InstrumentType;
 import tinkoff.trading.bot.market.instrument.TradingInstrument;
 import tinkoff.trading.bot.market.mapper.RequestInstrumentsType;
 import tinkoff.trading.bot.market.mapper.RequesterObject;
-import tinkoff.trading.bot.market.mapper.TradingInstrumentCallMapper;
-import tinkoff.trading.bot.market.mapper.TradingInstrumentsMapper;
 
-import java.util.Map;
-
-import static java.util.function.Function.identity;
 import static tinkoff.trading.bot.backend.api.SaveInvestApiToReactorContextConfiguration.GET_INVEST_API_FROM_CONTEXT;
-import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 
 @RestController
 @RequestMapping("/backend/instruments")
@@ -29,27 +24,22 @@ import static tinkoff.trading.bot.utils.CompletableFutureToMonoAdapter.toMono;
 @Slf4j
 public class InstrumentController {
 
-    private final Map<String, TradingInstrumentCallMapper> tradingInstrumentCallers;
-    private final TradingInstrumentsMapper                 instrumentsMapper;
+    private final BackendInstrumentClient instrumentClient;
 
     @GetMapping("/assets")
     public Flux<Asset> getAssets(
 
     ) {
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMap(api -> toMono(api.getInstrumentsService().getAssets()))
-                .flatMapIterable(identity())
-                .map(instrumentsMapper::toDto);
+                .flatMapMany(instrumentClient::getAssets);
     }
 
     @GetMapping("/assets/{uid}")
-    public Mono<AssetFull> getAssets(
+    public Mono<AssetFull> getAsset(
             @PathVariable String uid
     ) {
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMap(api -> toMono(api.getInstrumentsService().getAssetBy(uid)))
-                .map(instrumentsMapper::toDto)
-                .onErrorStop();
+                .flatMap(api -> instrumentClient.getAsset(api, uid));
     }
 
     @GetMapping("/{type}/{requestType}")
@@ -58,32 +48,28 @@ public class InstrumentController {
             @PathVariable RequestInstrumentsType requestType
     ) {
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMapMany(api -> tradingInstrumentCallers
-                        .get(type.name())
-                        .apply(api.getInstrumentsService(), RequesterObject.multiple(requestType))
-                );
+                .flatMapMany(api -> instrumentClient.getTradingInstruments(
+                        api,
+                        type,
+                        RequesterObject.multiple(requestType)
+                ));
     }
 
     @GetMapping("/{type}/figis/{figi}")
-    public Flux<? extends TradingInstrument> getTradingSpecifiedInstrumentByFigi(
+    public Flux<? extends TradingInstrument> getTradingSpecifiedInstrument(
             @PathVariable InstrumentType type,
             @PathVariable String figi
     ) {
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMapMany(api -> tradingInstrumentCallers
-                        .get(type.name())
-                        .apply(api.getInstrumentsService(), RequesterObject.single(figi))
-                )
-                .switchIfEmpty(Mono.error(() -> new TradingInstrumentNotFoundException(type, figi)));
+                .flatMapMany(api -> instrumentClient.getTradingInstruments(api, type, RequesterObject.single(figi)));
     }
 
     @GetMapping("/{figi}")
-    public Flux<TradingInstrument> getTradingInstrumentByFigi(
+    public Mono<TradingInstrument> getTradingInstrument(
             @PathVariable String figi
     ) {
         return GET_INVEST_API_FROM_CONTEXT
-                .flatMapMany(api -> toMono(api.getInstrumentsService().getInstrumentByFigi(figi)))
-                .map(instrumentsMapper::toDto);
+                .flatMap(api -> instrumentClient.getTradingInstrument(api, figi));
     }
 
 }

@@ -1,8 +1,8 @@
 package tinkoff.trading.bot.market.mapper;
 
 import lombok.RequiredArgsConstructor;
-import org.reactivestreams.Publisher;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import ru.tinkoff.piapi.core.InstrumentsService;
 import tinkoff.trading.bot.market.instrument.Future;
 
@@ -18,7 +18,7 @@ class FutureTradingInstrumentCallMapper
     private final TradingInstrumentsMapper instrumentsMapper;
 
     @Override
-    public Publisher<Future> apply(InstrumentsService instrumentsService, RequesterObject requesterObject) {
+    public Flux<Future> apply(InstrumentsService instrumentsService, RequesterObject requesterObject) {
         if (isNull(requesterObject.getFigi())) {
             switch (requesterObject.getRequestType()) {
                 case ALL:
@@ -32,6 +32,7 @@ class FutureTradingInstrumentCallMapper
             }
         }
         return toMono(instrumentsService.getFutureByFigi(requesterObject.getFigi()))
-                .map(instrumentsMapper::toDto);
+                .map(instrumentsMapper::toDto)
+                .flux();
     }
 }
